@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create New Event</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="container">
+    <div class="main-content">
+
+      <div class="dashboard-header">
+        <h1>Create New Event</h1>
+        <nav>
+          <ul>
+            <li><a href="organizer.html">Home</a></li>
+            <li><a href="create-event.html">Create Event</a></li>
+            <li><a href="completed-events.html">Completed Events</a></li>
+            <li><a href="live-events.html">Live</a></li>
+            <li><a href="contact-us.html">Contact Me</a></li>
+            <li><a href="#" id="logout-link">Logout</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <form id="create-event-form">
+        <div>
+          <label for="eventTitle">Event Title:</label>
+          <input type="text" id="eventTitle" name="title" required>
+        </div>
+
+        <div>
+          <label for="eventDescription">Event Description:</label>
+          <textarea id="eventDescription" name="description" required></textarea>
+        </div>
+
+        <div class="date-time">
+          <div>
+            <label for="eventDate">Date:</label>
+            <input type="date" id="eventDate" name="date" required>
+          </div>
+          <div>
+            <label for="startTime">Start Time:</label>
+            <input type="time" id="startTime" name="startTime" required>
+          </div>
+          <div>
+            <label for="endTime">End Time:</label>
+            <input type="time" id="endTime" name="endTime" required>
+          </div>
+        </div>
+
+        <div>
+          <label for="eventType">Type:</label>
+          <select id="eventType" name="type" required>
+            <option value="">Select Type</option>
+            <option value="online">Online</option>
+            <option value="in-person">In-person</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="eventLocation">Location:</label>
+          <input type="text" id="eventLocation" name="location" placeholder="Enter event location" required>
+        </div>
+
+        <button type="submit">Create</button>
+      </form>
+
+    </div>
+  </div>
+
+  <script>
+    const createEventForm = document.getElementById('create-event-form');
+    const eventTypeSelect = document.getElementById('eventType');
+    const eventLocationInput = document.getElementById('eventLocation');
+    const logoutLink = document.getElementById('logout-link');
+
+    // Update location placeholder based on event type
+    eventTypeSelect.addEventListener('change', () => {
+      if (eventTypeSelect.value === 'online') {
+        eventLocationInput.placeholder = 'Enter the Jitsu Link';
+      } else if (eventTypeSelect.value === 'in-person') {
+        eventLocationInput.placeholder = 'Enter the location';
+      } else {
+        eventLocationInput.placeholder = 'Enter event location';
+      }
+    });
+
+    // ... (rest of your JavaScript code) ...
+  </script>
+
+</body>
+</html>

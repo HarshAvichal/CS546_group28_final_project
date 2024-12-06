@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Organizer Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="container">
+    <div class="main-content"> 
+
+      <div class="dashboard-header">
+        <h1>Organizer Dashboard</h1>
+        <nav>
+          <ul>
+            <li><a href="organizer.html">Home</a></li>
+            <li><a href="create-event.html">Create Event</a></li>
+            <li><a href="completed-events.html">Completed Events</a></li>
+            <li><a href="live-events.html">Live</a></li>
+            <li><a href="contact-us.html">Contact Me</a></li>
+            <li><a href="#" id="logout-link">Logout</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="filters">
+        <select id="category-filter">
+          <option value="">Select Category</option>
+          <option value="online">Online</option>
+          <option value="in-person">In-person</option>
+        </select>
+        <button id="search-btn">Search</button>
+      </div>
+
+      <div class="events-section">
+        <h2>My Events <a href="#" class="view-all">View All</a></h2> 
+        <div class="events-grid" id="events-grid"></div>
+      </div>
+
+      <div class="pagination">
+        <button id="prev-page" disabled>Prev</button>
+        <span id="current-page">1</span>
+        <button id="next-page">Next</button>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
