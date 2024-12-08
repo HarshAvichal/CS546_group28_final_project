@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Event Details</title><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="container">
+    <div class="sidebar">
+      <img src="Event Ease sample logo.jpeg" alt="Eventease Logo">
+    </div>
+    <div class="main-content">
+
+      <div class="dashboard-header">
+        <h1>Event Details</h1>
+        <nav>
+          <ul>
+            <li><a href="organizer.html">Home</a></li>
+            <li><a href="create-event.html">Create Event</a></li>
+            <li><a href="completed-events.html">Completed Events</a></li>
+            <li><a href="live-events.html">Live</a></li>
+            <li><a href="contact-us.html">Contact Me</a></li>
+            <li><a href="#" id="logout-link">Logout</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div id="event-details">
+        </div>
+
+      <div id="rsvp-list">
+        <h3>RSVP List</h3>
+        <ul id="rsvp-list-items">
+          </ul>
+      </div>
+
+      <div id="feedback-list">
+        <h3>Feedback</h3>
+        <ul id="feedback-list-items">
+          </ul>
+      </div>
+
+      <button id="update-event-btn">Update Event</button>
+      <button id="delete-event-btn">Delete Event</button>
+
+    </div>
+  </div>
+
+  <script>
+    const eventId = new URLSearchParams(window.location.search).get('id');
+    const eventDetailsDiv = document.getElementById('event-details');
+    const rsvpListItems = document.getElementById('rsvp-list-items');
+    const feedbackListItems = document.getElementById('feedback-list-items');
+    const updateEventBtn = document.getElementById('update-event-btn');
+    const deleteEventBtn = document.getElementById('delete-event-btn');
+    const logoutLink = document.getElementById('logout-link');
+
+    // Fetch event details
+    async function fetchEventDetails() {
+      try {
+        const response = await fetch(`/api/v1/events/details/${eventId}`);
+        const event = await response.json();
+
+        // Display event details
+        eventDetailsDiv.innerHTML = `
+          <h2>${event.title}</h2>
+          <p>${event.description}</p>
+          <p>Location: ${event.location}</p>
+          <p>Start Time: ${event.startTime}</p>
+          <p>End Time: ${event.endTime}</p>
+          <p>Date: ${event.date}</p>
+        `;
+
+        // Fetch RSVP list
+        const rsvpResponse = await fetch(`/api/v1/events/${eventId}/rsvps`);
+        const rsvps = await rsvpResponse.json();
+
+        rsvpListItems.innerHTML = ''; // Clear previous RSVPs
+        rsvps.forEach(rsvp => {
+          const rsvpItem = `
+            <li>${rsvp.participant.firstName} ${rsvp.participant.lastName}</li>
+          `;
+          rsvpListItems.innerHTML += rsvpItem;
+        });
+
+        // Fetch feedback if event is completed
+        if (event.status === 'completed') {
+          const feedbackResponse = await fetch(`/api/v1/events/${eventId}/feedback`);
+          const feedback = await feedbackResponse.json();
+
+          feedbackListItems.innerHTML = ''; // Clear previous feedback
+          feedback.forEach(feedbackItem => {
+            const feedbackItemLi = `
+              <li>${feedbackItem.participant.firstName} ${feedbackItem.participant.lastName}: ${feedbackItem.comment}</li>
+            `;
+            feedbackListItems.innerHTML += feedbackItemLi;
+          });
+        } else {
+          // Hide feedback section if event is not completed
+          document.getElementById('feedback-list').style.display = 'none';
+        }
+
+      } catch (error) {
+        console.error('Error fetching event details:', error);
+        eventDetailsDiv.innerHTML = '<p>Error loading event details.</p>';
+      }
+    }
+
+    fetchEventDetails();
+
+    // Update event button handler
+    updateEventBtn.addEventListener('click', () => {
+      // Redirect to create-event.html with event ID for pre-filling
+      window.location.href = `create-event.html?id=${eventId}`;
+    });
+
+    // Delete event button handler
+    deleteEventBtn.addEventListener('click', async () => {
+      try {
+        const response = await fetch(`/api/v1/events/${eventId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          // Event deleted successfully
+          console.log('Event deleted successfully!');
+          window.location.href = 'organizer.html'; // Redirect to organizer dashboard
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to delete event:', errorData);
+          // Display error message to the user
+        }
+
+      } catch (error) {
+        console.error('Failed to delete event:', error);
+        // Display error message to the user
+      }
+    });
+
+    // Logout link handler
+    logoutLink.addEventListener('click', () => {
+      // Clear local storage or cookies (if used for authentication)
+      // Redirect to login page
+      window.location.href = 'login.html';
+    });
+  </script>
+
+</body>
+</html>
