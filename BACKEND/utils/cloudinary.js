@@ -1,22 +1,15 @@
-import cloudinary from 'cloudinary';
-import multer from 'multer';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import dotenv from 'dotenv';
+import { v2 as cloudinary } from "cloudinary";
+import multer from "multer";
+import dotenv from "dotenv";
 
+// Load environment variables from .env file
 dotenv.config();
 
-cloudinary.v2.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
+// Configure Cloudinary with environment variables
+cloudinary.config({
+  cloud_name: "dd8wpotys",
+  api_key: "486234119426538",
+  api_secret: "5A3iGsBrw8X9jkOdDWCSwdVsQjU",
 });
 
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary.v2,
-    params: {
-        folder: 'event_thumbnails', // Folder name in Cloudinary
-        allowed_formats: ['jpg', 'jpeg', 'png'], // Allow only these formats
-    },
-});
-
-export const upload = multer({ storage });
+export default cloudinary;

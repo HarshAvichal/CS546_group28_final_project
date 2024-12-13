@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import path from "path";
 import dbConnect from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js"; // Routes for authentication (login/signup)
 import eventRoutes from "./routes/eventRoutes.js"; // Routes for event management
@@ -23,9 +24,12 @@ dbConnect();
 // Default PORT
 const PORT = process.env.PORT || 3000;
 
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname, "../Frontend")));
+
 // Welcome route (default endpoint)
 app.get("/", (req, res) => {
-    res.send("<h1>Welcome to the EventEase</h1>");
+    res.sendFile(path.join(__dirname, "../Frontend", "login.html"));
 });
 
 // Use Routes

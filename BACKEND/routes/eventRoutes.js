@@ -13,7 +13,7 @@ import {
     searchEvents,
 } from "../controllers/Event.js";
 import { auth, isOrganizer, isParticipant } from "../middlewares/auth.js";
-import { upload } from "../utils/cloudinary.js";
+import upload from "../middlewares/multer.js";
 
 const router = express.Router();
 
