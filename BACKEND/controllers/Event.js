@@ -219,10 +219,15 @@ export const getOrganizerCompletedEvents = async (req, res, next) => {
       query.type = normalizedType;
     }
 
+    await Event.updateMany(
+      { ...query, status: { $ne: "completed" } }, // Only update if status is not already "completed"
+      { $set: { status: "completed" } }
+    );
+
     const totalItems = await Event.countDocuments(query); // Total number of matching events
     const events = await Event.find(
       query,
-      "title description date startTime endTime type status thumbnail location"
+      "title date startTime endTime type status"
     ) // Project minimal fields
       .sort({ date: -1, endTime: -1 }) // Sort by date and endTime
       .skip((page - 1) * limit) // Skip documents for pagination
@@ -243,9 +248,26 @@ export const getOrganizerCompletedEvents = async (req, res, next) => {
   }
 };
 
+
 // Live Events
 export const getOrganizerLiveEvents = async (req, res, next) => {
   try {
+    const currentDateTime = new Date(); // Current date and time
+    const currentDate = currentDateTime.toISOString().split("T")[0]; // Current date in YYYY-MM-DD
+    const currentTime = currentDateTime.toTimeString().split(" ")[0]; // Current time in HH:MM:SS
+
+    // Update events to "live" if they are happening right now and status is not already "live"
+    await Event.updateMany(
+      {
+        organizerId: req.user.id,
+        status: { $ne: "live" }, // Exclude already "live" events
+        date: currentDate, // Events happening today
+        startTime: { $lte: currentTime }, // Start time has passed
+        endTime: { $gte: currentTime }, // End time has not yet passed
+      },
+      { $set: { status: "live" } }
+    );
+
     // Fetch live events created by the organizer
     const liveEvents = await Event.find(
       {
@@ -325,12 +347,13 @@ export const getParticipantCompletedEvents = async (req, res, next) => {
     // Normalize the type filter (case-insensitive)
     const normalizedType = type ? type.toLowerCase() : null;
 
+    // Query to find completed events (past events or events ending today)
     const query = {
       $or: [
         { date: { $lt: currentDateTime.toISOString().split("T")[0] } }, // Past dates
         {
           date: currentDateTime.toISOString().split("T")[0], // Today
-          endTime: { $lt: currentDateTime.toTimeString().split(" ")[0] },
+          endTime: { $lt: currentDateTime.toTimeString().split(" ")[0] }, // Time already passed
         },
       ],
     };
@@ -340,13 +363,20 @@ export const getParticipantCompletedEvents = async (req, res, next) => {
       query.type = normalizedType;
     }
 
+    // Update status to "completed" for matching events
+    await Event.updateMany(
+      { ...query, status: { $ne: "completed" } }, // Only update if status is not already "completed"
+      { $set: { status: "completed" } }
+    );
+
+    // Fetch updated list of completed events
     const totalItems = await Event.countDocuments(query); // Total number of matching events
     const events = await Event.find(
       query,
-      "title date startTime endTime type status"
-    ) // Project minimal fields
+      "title date startTime endTime type status" // Project only relevant fields
+    )
       .sort({ date: -1, endTime: -1 }) // Sort by date and endTime
-      .skip((page - 1) * limit) // Skip documents for pagination
+      .skip((page - 1) * limit) // Skip for pagination
       .limit(parseInt(limit)); // Limit the number of documents
 
     res.status(200).json({
