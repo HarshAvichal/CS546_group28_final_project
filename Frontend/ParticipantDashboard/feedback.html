@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Feedback</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="main-content">
+        <div class="dashboard-header">
+          <h1>Feedback</h1>
+          <nav>
+            <ul>
+              <li><a href="participant.html">Home</a></li>
+              <li>
+                <a href="completed-events.html">Completed Events</a>
+              </li>
+              <li><a href="my-events.html">My events</a></li>
+              <li><a href="#" id="logout-link">Logout</a></li>
+            </ul>
+          </nav>
+        </div>
+
+        <div class="feedback-form">
+          <h2>Submit Your Feedback</h2>
+          <form id="feedback-form">
+            <input type="hidden" id="eventId" name="eventId" />
+            <label for="feedback">Feedback:</label>
+            <textarea id="feedback" name="feedback" rows="5" required></textarea>
+            <button type="submit">Submit Feedback</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const feedbackForm = document.getElementById("feedback-form");
+        const eventIdInput = document.getElementById("eventId");
+
+        // Get the eventId from the query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = urlParams.get("eventId");
+
+        if (eventId) {
+          eventIdInput.value = eventId;
+        } else {
+          // Handle the case where eventId is missing
+          console.error("eventId is missing.");
+          // You might want to redirect the user or display an error message
+        }
+
+        feedbackForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+
+          const feedback = document.getElementById("feedback").value;
+
+          try {
+            const response = await fetch(
+              `/api/v1/events/${eventId}/feedback`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({ feedback }),
+              }
+            );
+
+            if (response.ok) {
+              alert("Feedback submitted successfully!");
+              feedbackForm.reset();
+              // Redirect to the Participant
+              window.location.href = "participant.html";
+            } else {
+              const errorData = await response.json();
+              console.error("Feedback submission failed:", errorData.message);
+              alert(errorData.message);
+            }
+          } catch (error) {
+            console.error("Error submitting feedback:", error);
+            alert("An error occurred while submitting feedback.");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
