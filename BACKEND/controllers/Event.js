@@ -151,7 +151,7 @@ export const createEvent = async (req, res, next) => {
 export const getOrganizerUpcomingEvents = async (req, res, next) => {
   try {
     const currentDateTime = new Date();
-    const { type, page = 1, limit = 10 } = req.query; // Extract query parameters with defaults
+    const { type, page = 1, limit = 200 } = req.query; // Extract query parameters with defaults
 
     // Normalize the type filter (case-insensitive)
     const normalizedType = type ? type.toLowerCase() : null;
@@ -174,7 +174,7 @@ export const getOrganizerUpcomingEvents = async (req, res, next) => {
     const totalItems = await Event.countDocuments(query); // Total number of matching events
     const events = await Event.find(
       query,
-      "title date startTime endTime type status thumbnail location"
+      "title description date startTime endTime type status thumbnail location"
     ) // Project minimal fields
       .sort({ date: 1, startTime: 1 }) // Sort by date and startTime
       .skip((page - 1) * limit) // Skip documents for pagination
@@ -222,7 +222,7 @@ export const getOrganizerCompletedEvents = async (req, res, next) => {
     const totalItems = await Event.countDocuments(query); // Total number of matching events
     const events = await Event.find(
       query,
-      "title date startTime endTime type status"
+      "title description date startTime endTime type status thumbnail location"
     ) // Project minimal fields
       .sort({ date: -1, endTime: -1 }) // Sort by date and endTime
       .skip((page - 1) * limit) // Skip documents for pagination

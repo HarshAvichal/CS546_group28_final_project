@@ -1,28 +1,97 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Signup</title>
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="container">
-    <div class="logo">
-        <img src="Event Ease sample logo.jpeg" alt="Eventease Logo">
-    </div> 
-    <h1>Get Started Now!</h1>
-    <form id="signup-form">
-      <input type="text" id="firstName" name="firstName" placeholder="First Name" required>
-      <input type="text" id="lastName" name="lastName" placeholder="Last Name" required>
-      <input type="email" id="email" name="email" placeholder="Email Address" required>
-      <select id="role" name="role">
-        <option value="participant">Participant</option>
-        <option value="organizer">Organizer</option>
-      </select>
-      <input type="password" id="password" name="password" placeholder="Password" required>
-      <button type="submit">Signup</button>
-    </form>
-    <p>Have an account? <a href="login.html">Sign in</a></p>
-  </div>
+  <head>
+    <title>Signup</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img src="Event Ease sample logo.jpeg" alt="Eventease Logo" />
+      </div>
+      <h1>Get Started Now!</h1>
+      <form id="signup-form">
+        <input
+          type="text"
+          id="firstName"
+          name="firstName"
+          placeholder="First Name"
+          required
+        />
+        <input
+          type="text"
+          id="lastName"
+          name="lastName"
+          placeholder="Last Name"
+          required
+        />
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Email Address"
+          required
+        />
+        <select id="role" name="role">
+          <option value="participant">Participant</option>
+          <option value="organizer">Organizer</option>
+        </select>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Password"
+          required
+        />
+        <button type="submit">Signup</button>
+      </form>
+      <p>Have an account? <a href="login.html">Sign in</a></p>
+    </div>
 
-  <script src="scripts.js"></script> </body>
+    <script>
+      document
+        .getElementById("signup-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault(); 
+          const firstName = document.getElementById("firstName").value;
+          const lastName = document.getElementById("lastName").value;
+          const role = document.getElementById("role").value;
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          try {
+            const response = await fetch(
+              "http://localhost:3000/api/v1/auth/signup",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  firstName,
+                  lastName,
+                  role,
+                  email,
+                  password,
+                }),
+              }
+            );
+
+            if (response.ok) {
+              const data = await response.json();
+              alert(data.message); 
+
+              localStorage.setItem("token", data.token);
+              window.location.href = "/OrganizerDashboard/organizer.html";
+            } else {
+              const error = await response.json();
+              alert(error.message); 
+            }
+          } catch (err) {
+            console.error("Error logging in:", err);
+            alert("Something went wrong. Please try again later.");
+          }
+        });
+    </script>
+  </body>
 </html>

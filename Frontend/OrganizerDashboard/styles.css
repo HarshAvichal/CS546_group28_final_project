@@ -133,27 +133,40 @@ li a:hover{
   margin-bottom: 20px;
 }
 
+.event-container{
+  display: flex;
+  gap:20px;
+}
+
 .events-row {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.event-row {
+.row {
   display: flex;
-  gap:20px;
-  background-color: #ffffff;
-  border-radius: 8px;
+  margin-top:20px;
+  border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  height:300px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   transition: background-color 0.3s ease;
+  background-color: #ffffff;
+  justify-self: center;
+  vertical-align: baseline;
 }
 
-.event-row:hover {
+.row:hover {
   background-color: #f0f0f0;
 }
 
+.event-info{
+  margin-top:10px;
+}
+
 .event-title,
+.event-description,
 .event-date, 
 .event-time, 
 .event-type, 
@@ -168,9 +181,14 @@ li a:hover{
   font-size:20px;
 }
 
+.event-description{
+ text-align: justify;
+ margin-bottom: 10px;
+}
+
 .event-thumbnail{
-  height:200px;
-  width:300px;
+  height:250px;
+  width:350px;
   border-radius: 20px;
 }
 

@@ -3,8 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Create Event</title>
+    <title>Event Ease</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="card.css" />
     <link rel=”stylesheet”
     href=”https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css”/>
     <link
@@ -13,7 +14,7 @@
     />
   </head>
   <body>
-    <div class="container">
+    <div class="create-form-container">
       <header class="header">
         <div class="navbar">
           <ul class="nav-list">
@@ -21,15 +22,22 @@
               <a href="./organizer.html" class="nav-title-name">Event Ease</a>
             </li>
             <li><a href="./create-event.html">Create Event</a></li>
-            <li><a href="#subscription">Completed Event</a></li>
-            <li><a href="#testimonials">Live</a></li>
-            <li><a href="#footer-section">Contact Us</a></li>
+            <li><a href="./completed-events.html">Completed Event</a></li>
+            <li><a href="./live-events.html">Live Event</a></li>
             <li class="nav-icon-1">
               <i class="bi bi-person-circle user-icon"></i>
+            </li>
+            <li>
+              <a
+                class="logout-dashboard"
+                href="http://localhost:3000/login.html"
+                >Logout</a
+              >
             </li>
           </ul>
         </div>
       </header>
+
       <div class="event-ease-intro">
         <div class="event-ease-heading-primary">
           <h1 class="event-ease-heading-primary-title">We are Event EASE</h1>
@@ -42,15 +50,11 @@
           <h2 class="event-ease-heading-secondary-line">to life!</h2>
         </div>
       </div>
+
       <div class="create-event-form">
         <h1 class="form-title">Start with Creating New Event</h1>
 
-        <form
-          id="create-event-form"
-          enctype="multipart/form-data"
-          method="post"
-        >
-          <!-- Event Title -->
+        <form id="create-event-form">
           <label for="eventTitle">Event Title</label>
           <input
             type="text"
@@ -60,7 +64,6 @@
             required
           />
 
-          <!-- Event Description -->
           <label for="eventDescription">Event Description</label>
           <textarea
             id="eventDescription"
@@ -69,36 +72,29 @@
             required
           ></textarea>
 
-          <!-- Event Date -->
           <label for="eventDate">Event Date</label>
           <input type="date" id="eventDate" name="date" required />
 
-          <!-- Start Time -->
           <label for="startTime">Start Time (24-hour format)</label>
           <input type="time" id="startTime" name="startTime" required />
 
-          <!-- End Time -->
           <label for="endTime">End Time (24-hour format)</label>
           <input type="time" id="endTime" name="endTime" required />
 
-          <!-- Event Type -->
           <label for="eventType">Type</label>
           <select id="eventType" name="type" required>
             <option value="online">Online</option>
             <option value="in-person">In-person</option>
           </select>
 
-          <!-- Event Location -->
           <label for="eventLocation">Location</label>
           <input
             type="text"
             id="eventLocation"
             name="location"
             placeholder="https://meet.jit.si/<your room name>"
-            required
           />
 
-          <!-- Thumbnail Upload -->
           <label for="eventThumbnail">Upload Thumbnail (Optional)</label>
           <input
             type="file"
@@ -107,56 +103,96 @@
             accept="image/*"
           />
 
-          <!-- Submit Button -->
           <button type="submit" class="submit-button">Create Event</button>
         </form>
       </div>
     </div>
 
-    <script src="organizer.js"></script>
     <script>
-      const eventDateInput = document.getElementById("eventDate");
-      const today = new Date().toISOString().split("T")[0];
-      eventDateInput.setAttribute("min", today);
+      document.addEventListener("DOMContentLoaded", () => {
+        const createEventForm = document.getElementById("create-event-form");
+        const eventDateInput = document.getElementById("eventDate");
+        const startTimeInput = document.getElementById("startTime");
+        const endTimeInput = document.getElementById("endTime");
+        const eventType = document.getElementById("eventType");
+        const eventLocation = document.getElementById("eventLocation");
+        const today = new Date().toISOString().split("T")[0];
 
-      const startTimeInput = document.getElementById("startTime");
-      const endTimeInput = document.getElementById("endTime");
+        eventDateInput.setAttribute("min", today);
 
-      eventDateInput.addEventListener("change", function () {
-        const selectedDate = new Date(this.value);
-        const currentDate = new Date(today);
-        if (selectedDate < currentDate) {
-          alert("Event date cannot be in the past.");
-          this.value = "";
-        }
-      });
+        // Change event for event type
+        eventType.addEventListener("change", function () {
+          if (eventType.value === "online") {
+            eventLocation.placeholder = "https://meet.jit.si/<your room name>";
+          } else {
+            eventLocation.placeholder = "Enter event location";
+          }
+        });
 
-      startTimeInput.addEventListener("input", function () {
-        const startTime = this.value;
-        if (!startTime) {
-          endTimeInput.value = "";
-          endTimeInput.disabled = true;
-        } else {
-          endTimeInput.disabled = false;
+        eventDateInput.addEventListener("change", function () {
+          const selectedDate = new Date(this.value);
+          if (selectedDate < new Date(today)) {
+            alert("Event date cannot be in the past.");
+            this.value = "";
+          }
+        });
+
+        startTimeInput.addEventListener("input", function () {
+          const startTime = this.value;
+          endTimeInput.disabled = !startTime;
           endTimeInput.setAttribute("min", startTime);
-        }
-      });
+        });
 
-      // Function to validate the end time
-      endTimeInput.addEventListener("input", function () {
-        const startTime = startTimeInput.value;
-        const endTime = this.value;
+        endTimeInput.addEventListener("input", function () {
+          const startTime = startTimeInput.value;
+          if (this.value <= startTime) {
+            alert("End time must be after the start time.");
+            this.value = "";
+          }
+        });
 
-        if (!startTime) {
-          alert("Please select a start time before choosing an end time.");
-          this.value = "";
-          return;
-        }
+        createEventForm.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const formData = new FormData(createEventForm);
 
-        if (endTime <= startTime) {
-          alert("End time must be after the start time.");
-          this.value = "";
-        }
+          if (
+            !formData.get("title") ||
+            !formData.get("description") ||
+            !formData.get("date")
+          ) {
+            alert("Please fill out all required fields.");
+            return;
+          }
+
+          if (formData.get("startTime") >= formData.get("endTime")) {
+            alert("End time must be after start time.");
+            return;
+          }
+
+          try {
+            const response = await fetch(
+              "http://localhost:3000/api/v1/events/create",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: formData,
+              }
+            );
+
+            if (response.ok) {
+              alert("Event created successfully!");
+              createEventForm.reset();
+              window.location.href = "organizer.html";
+            } else {
+              const result = await response.json();
+              alert(`Error: ${result.message}`);
+            }
+          } catch (error) {
+            alert("Something went wrong. Please try again later.");
+          }
+        });
       });
     </script>
   </body>

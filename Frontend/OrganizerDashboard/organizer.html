@@ -15,7 +15,6 @@
   </head>
   <body>
     <div class="container">
-      <!-- Header Section -->
       <header class="header">
         <div class="navbar">
           <ul class="nav-list">
@@ -24,17 +23,15 @@
             </li>
             <li><a href="./create-event.html">Create Event</a></li>
             <li><a href="./completed-events.html">Completed Event</a></li>
-            <li><a href="./live-events.html">Live</a></li>
-            <li><a href="#footer-section">Contact Us</a></li>
+            <li><a href="./live-events.html">Live Event</a></li>
             <li class="nav-icon-1">
               <i class="bi bi-person-circle user-icon"></i>
             </li>
-            <li><a href="http://localhost:3000/login.html">Logout</a></li>
+            <li><a class="logout-dashboard" href="http://localhost:3000/login.html">Logout</a></li>
           </ul>
         </div>
       </header>
 
-      <!-- Filters Section -->
       <section class="filters-section">
         <div class="login-type">Organizer Dashboard</div>
         <div class="filters">
@@ -48,35 +45,18 @@
         </div>
       </section>
 
-      <!-- Events Section -->
       <section class="events-section">
         <h2>My Events</h2>
         <div id="my-events-grid" class="events-row"></div>
       </section>
     </div>
 
-    <!-- Footer Section -->
     <footer id="footer-section">
       <div class="footer-content">
         <p>© 2024 Event Ease. All Rights Reserved.</p>
       </div>
     </footer>
 
-    <script>
-      function checkTokenAndRedirect() {
-        const token = localStorage.getItem("authToken");
-        console.log(token);
-        if (token === null) {
-          alert("Your session has expired. Please log in again.");
-          localStorage.removeItem("authToken");
-          window.location.href = "http://localhost:3000/login.html";
-        }
-      }
-
-      document.addEventListener("click", () => {
-        checkTokenAndRedirect();
-      });
-    </script>
-     <script src="./organizer.js"></script>
+    <script src="./script.js"></script>
   </body>
 </html>
