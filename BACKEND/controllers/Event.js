@@ -227,7 +227,7 @@ export const getOrganizerCompletedEvents = async (req, res, next) => {
     const totalItems = await Event.countDocuments(query); // Total number of matching events
     const events = await Event.find(
       query,
-      "title date startTime endTime type status"
+      "title description date startTime endTime type status thumbnail location"
     ) // Project minimal fields
       .sort({ date: -1, endTime: -1 }) // Sort by date and endTime
       .skip((page - 1) * limit) // Skip documents for pagination
@@ -256,7 +256,6 @@ export const getOrganizerLiveEvents = async (req, res, next) => {
     const currentDate = currentDateTime.toISOString().split("T")[0]; // Current date in YYYY-MM-DD
     const currentTime = currentDateTime.toTimeString().split(" ")[0]; // Current time in HH:MM:SS
 
-    // Update events to "live" if they are happening right now and status is not already "live"
     await Event.updateMany(
       {
         organizerId: req.user.id,
@@ -274,7 +273,7 @@ export const getOrganizerLiveEvents = async (req, res, next) => {
         organizerId: req.user.id,
         status: "live",
       },
-      "title date startTime endTime type thumbnail" // Select only necessary fields
+      "title date startTime endTime type thumbnail location status description" // Select only necessary fields
     ).sort({ date: 1, startTime: 1 }); // Sort by date and startTime
 
     if (liveEvents.length === 0) {

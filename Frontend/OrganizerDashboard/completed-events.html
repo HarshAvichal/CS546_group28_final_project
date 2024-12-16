@@ -15,7 +15,6 @@
   </head>
   <body>
     <div class="container">
-      <!-- Header Section -->
       <header class="header">
         <div class="navbar">
           <ul class="nav-list">
@@ -28,12 +27,17 @@
             <li class="nav-icon-1">
               <i class="bi bi-person-circle user-icon"></i>
             </li>
-            <li><a class="logout-dashboard" href="http://localhost:3000/login.html">Logout</a></li>
+            <li>
+              <a
+                class="logout-dashboard"
+                href="http://localhost:3000/login.html"
+                >Logout</a
+              >
+            </li>
           </ul>
         </div>
       </header>
 
-      <!-- Filters Section -->
       <section class="filters-section">
         <div class="login-type">Organizer Dashboard</div>
         <div class="filters">
@@ -47,20 +51,46 @@
         </div>
       </section>
 
-      <!-- Events Section -->
       <section class="events-section">
         <h2>Completed Events</h2>
         <div id="completed-events-grid" class="events-row"></div>
       </section>
     </div>
 
-    <!-- Footer Section -->
     <footer id="footer-section">
       <div class="footer-content">
-        <p>© 2024 Event Ease. All Rights Reserved.</p>
+        <div class="footer-logo">
+          <img src="../Event Ease sample logo.jpeg" alt="Event Ease Logo" />
+        </div>
+        <div class="footer-links">
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Services</a></li>
+            <li><a href="#">Events</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div class="footer-social">
+          <a href="https://facebook.com" target="_blank" class="social-icon"
+            >FB</a
+          >
+          <a href="https://twitter.com" target="_blank" class="social-icon"
+            >TW</a
+          >
+          <a href="https://instagram.com" target="_blank" class="social-icon"
+            >IG</a
+          >
+          <a href="https://linkedin.com" target="_blank" class="social-icon"
+            >IN</a
+          >
+        </div>
+        <div class="footer-copyright">
+          <p>&copy; 2024 Event Ease. All Rights Reserved.</p>
+        </div>
       </div>
     </footer>
 
-     <script src="./script.js"></script>
+    <script src="./script.js"></script>
   </body>
 </html>
