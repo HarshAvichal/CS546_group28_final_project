@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (logoutButton) {
     logoutButton.addEventListener("click", async (e) => {
       e.preventDefault();
-      alert("Logging out...");
       try {
         const response = await fetch(
           "http://localhost:3000/api/v1/auth/logout",
@@ -28,7 +27,20 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         if (response.ok) {
-          alert("Successfully logged out");
+          Toastify({
+            text: "Successfully logged out",
+            duration: 7000,
+            destination: "https://github.com/apvarun/toastify-js",
+            newWindow: true,
+            close: true,
+            gravity: "top", 
+            position: "right", 
+            stopOnFocus: true, // Prevents dismissing of toast on hover
+            style: {
+              background: "red",
+            },
+            onClick: function () {}, 
+          }).showToast();
 
           localStorage.clear();
           window.location.href = "/login.html";
@@ -154,8 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const data = await response.json();
         eventsGrid.innerHTML = "";
-
-        const events = Array.isArray(data) ? data : data.events;
+        const events = Array.isArray(data) ? data : data.liveEvents;
+        console.log(events);
         if (Array.isArray(events)) {
           events.forEach((event) => createEventRow(event, eventsGrid));
         } else {
@@ -246,9 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="event-description">${
         event.description || "No Description Available"
       }</div>
-      <div class="event-date"><strong>Date:</strong> ${formatDate(
-        event.date
-      )}</div>
+      <div class="event-date"><strong>Date:</strong> ${event.date}</div>
       <div class="event-time"><strong>Time:</strong> ${formatTime(
         event.startTime
       )} - ${formatTime(event.endTime)}</div>
@@ -266,7 +276,13 @@ document.addEventListener("DOMContentLoaded", () => {
           : "N/A"
       }
     </div>
-      <button class="update-event-button" data-event='${JSON.stringify(event)}'>Update Event</button>
+    ${
+      event.status === "upcoming"
+        ? `<button class="update-event-button" data-event='${JSON.stringify(
+            event
+          )}'>Update Event</button>`
+        : ""
+    }
        
       </div>
       </div>
@@ -279,20 +295,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (event.target.classList.contains("update-event-button")) {
       event.preventDefault();
       const eventData = JSON.parse(event.target.getAttribute("data-event"));
-      window.location.href = "http://localhost:3000/OrganizerDashboard/update-event.html";
-      localStorage.setItem('eventData', JSON.stringify(eventData));
+      window.location.href =
+        "http://localhost:3000/OrganizerDashboard/update-event.html";
+      localStorage.setItem("eventData", JSON.stringify(eventData));
     }
   });
-
-  function formatDate(dateString) {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
 
   function formatTime(timeString) {
     if (!timeString) return "N/A";
