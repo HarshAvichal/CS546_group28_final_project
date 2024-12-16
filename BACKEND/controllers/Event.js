@@ -227,7 +227,7 @@ export const getOrganizerCompletedEvents = async (req, res, next) => {
     const totalItems = await Event.countDocuments(query); // Total number of matching events
     const events = await Event.find(
       query,
-      "title date startTime endTime type status"
+      "title description date startTime endTime type status thumbnail location"
     ) // Project minimal fields
       .sort({ date: -1, endTime: -1 }) // Sort by date and endTime
       .skip((page - 1) * limit) // Skip documents for pagination
