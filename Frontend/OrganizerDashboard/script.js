@@ -27,21 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
         if (response.ok) {
-          Toastify({
-            text: "Successfully logged out",
-            duration: 7000,
-            destination: "https://github.com/apvarun/toastify-js",
-            newWindow: true,
-            close: true,
-            gravity: "top", 
-            position: "right", 
-            stopOnFocus: true, // Prevents dismissing of toast on hover
-            style: {
-              background: "red",
-            },
-            onClick: function () {}, 
-          }).showToast();
-
+          alert("Successfully logout");
           localStorage.clear();
           window.location.href = "/login.html";
         } else {
@@ -80,7 +66,6 @@ document.addEventListener("DOMContentLoaded", () => {
         eventsGrid.innerHTML = "";
 
         const events = Array.isArray(data) ? data : data.events;
-        console.log(events);
         if (Array.isArray(events)) {
           events.forEach((event) => createEventRow(event, eventsGrid));
         } else {
@@ -124,7 +109,6 @@ document.addEventListener("DOMContentLoaded", () => {
         eventsGrid.innerHTML = "";
 
         const events = Array.isArray(data) ? data : data.events;
-        console.log(events);
         if (Array.isArray(events)) {
           events.forEach((event) => createEventRow(event, eventsGrid));
         } else {
@@ -167,7 +151,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await response.json();
         eventsGrid.innerHTML = "";
         const events = Array.isArray(data) ? data : data.liveEvents;
-        console.log(events);
         if (Array.isArray(events)) {
           events.forEach((event) => createEventRow(event, eventsGrid));
         } else {
@@ -244,6 +227,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  //CREATE EVENT ROW
   function createEventRow(event, parentElement) {
     const eventRow = document.createElement("div");
     eventRow.classList.add("row");
@@ -291,6 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
     parentElement.appendChild(eventRow);
   }
 
+  //UPDATE EVENT BTN
   document.addEventListener("click", function (event) {
     if (event.target.classList.contains("update-event-button")) {
       event.preventDefault();
@@ -301,6 +286,85 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  //FILTER PROPERTY
+  const categoryFilter = document.getElementById("category-filter");
+  const searchBtn = document.getElementById("search-btn");
+  const eventsGrid = document.getElementById("my-events-grid");
+  const baseURL = "http://localhost:3000/api/v1/events";
+
+  const isCompletedPage = window.location.pathname.includes("completed-events");
+  const endpoint = `${baseURL}/organizer/${
+    isCompletedPage ? "completed" : "upcoming"
+  }`;
+
+  // Fetch and render filtered events
+  const fetchFilteredEvents = async (typeFilter) => {
+    try {
+      const query = typeFilter ? `?type=${encodeURIComponent(typeFilter)}` : "";
+      const response = await fetch(`${endpoint}${query}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch events");
+
+      const data = await response.json();
+      renderEvents(data.events || []);
+    } catch (error) {
+      console.error("Error fetching filtered events:", error.message);
+      eventsGrid.innerHTML = `<p>Error loading events. Please try again later.</p>`;
+    }
+  };
+
+  // Render events in card format
+  const renderEvents = (events) => {
+    eventsGrid.innerHTML = ""; // Clear previous events
+
+    if (!events || events.length === 0) {
+      eventsGrid.innerHTML = `<p>No events found for the selected filter.</p>`;
+      return;
+    }
+
+    events.forEach((event) => {
+      const eventCard = document.createElement("div");
+      eventCard.classList.add("row");
+
+      eventCard.innerHTML = `
+      <div>
+        <img src="${event.thumbnail || "https://via.placeholder.com/350x250"}" 
+             alt="Event Image" 
+             class="event-thumbnail" />
+      </div>
+      <div class="event-info">
+        <div class="event-title"><strong>${event.title}</strong></div>
+        <div class="event-description">${
+          event.description || "No description available"
+        }</div>
+        <div class="event-date"><strong>Date:</strong> ${event.date}</div>
+        <div class="event-time"><strong>Time:</strong> ${formatTime(
+          event.startTime
+        )} - ${formatTime(event.endTime)}</div>
+        <div class="event-type"><strong>Type:</strong> ${event.type}</div>
+        <div class="event-status"><strong>Status:</strong> ${
+          event.status || (isCompletedPage ? "Completed" : "Upcoming")
+        }</div>
+      </div>
+    `;
+      eventsGrid.appendChild(eventCard);
+    });
+  };
+
+  searchBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const typeFilter = categoryFilter.value;
+    fetchFilteredEvents(typeFilter);
+  });
+
+  fetchFilteredEvents();
+
+  //FORMAT DATE TIME
   function formatTime(timeString) {
     if (!timeString) return "N/A";
     const [hour, minute] = timeString.split(":");
@@ -312,6 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  //IS DATE VALID
   function isValidDate(dateString) {
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     return dateRegex.test(dateString);

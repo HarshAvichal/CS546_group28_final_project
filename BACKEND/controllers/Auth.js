@@ -77,7 +77,15 @@ export const signup = async (req, res, next) => {
       }
     );
 
-    res.status(201).json({ message: "User registered successfully.", token });
+    res
+      .status(201)
+      .json({
+        message: "User registered successfully.",
+        token,
+        role: role,
+        firstName: firstName,
+        lastName: lastName,
+      });
   } catch (error) {
     console.error("Error during signup:", error);
     next(error); // Pass error to centralized error handler
@@ -101,11 +109,9 @@ export const login = async (req, res, next) => {
     const user = await User.findOne({ email: email.trim().toLowerCase() });
 
     if (!user) {
-      return res
-        .status(404)
-        .json({
-          message: "Cannot log in. User does not exist. Please sign up first.",
-        });
+      return res.status(404).json({
+        message: "Cannot log in. User does not exist. Please sign up first.",
+      });
     }
 
     // Validate the password
@@ -126,7 +132,15 @@ export const login = async (req, res, next) => {
         expiresIn: "1h",
       }
     );
-    res.status(200).json({ message: "Login successful", token });
+    res
+      .status(200)
+      .json({
+        message: "Login successful",
+        token,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      });
   } catch (error) {
     console.error("Error during login:", error);
     next(error);

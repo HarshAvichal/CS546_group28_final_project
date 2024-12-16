@@ -174,11 +174,11 @@
           }
 
           fetch(`http://localhost:3000/api/v1/events/${eventId}`, {
-            method: "PATCH", // Use PATCH to align with backend route
+            method: "PATCH", 
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-            body: formData, // Use FormData to handle file uploads properly
+            body: formData, 
           })
             .then((response) => {
               if (!response.ok) {
@@ -192,7 +192,6 @@
               return response.json();
             })
             .then((data) => {
-              console.log("Success:", data);
               alert("Event updated successfully!");
               localStorage.removeItem("eventData");
               window.location.href = "./organizer.html";

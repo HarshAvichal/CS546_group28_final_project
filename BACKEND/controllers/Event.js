@@ -248,7 +248,6 @@ export const getOrganizerCompletedEvents = async (req, res, next) => {
   }
 };
 
-
 // Live Events
 export const getOrganizerLiveEvents = async (req, res, next) => {
   try {
@@ -316,7 +315,7 @@ export const getParticipantUpcomingEvents = async (req, res, next) => {
     const totalItems = await Event.countDocuments(query); // Total number of matching events
     const events = await Event.find(
       query,
-      "title date startTime endTime type status"
+      "title date startTime endTime type status location thumbnail description"
     ) // Project minimal fields
       .sort({ date: 1, startTime: 1 }) // Sort by date and startTime
       .skip((page - 1) * limit) // Skip documents for pagination
@@ -372,7 +371,7 @@ export const getParticipantCompletedEvents = async (req, res, next) => {
     const totalItems = await Event.countDocuments(query); // Total number of matching events
     const events = await Event.find(
       query,
-      "title date startTime endTime type status" // Project only relevant fields
+      "title date startTime endTime type status thumbnail description location" // Project only relevant fields
     )
       .sort({ date: -1, endTime: -1 }) // Sort by date and endTime
       .skip((page - 1) * limit) // Skip for pagination
@@ -428,6 +427,8 @@ export const getParticipantMyEvents = async (req, res, next) => {
               startTime: event.startTime,
               endTime: event.endTime,
               type: event.type,
+              thumbnail: event.thumbnail,
+              location: event.location,
               status: "upcoming",
             });
           }
@@ -442,6 +443,8 @@ export const getParticipantMyEvents = async (req, res, next) => {
             startTime: event.startTime,
             endTime: event.endTime,
             type: event.type,
+            thumbnail: event.thumbnail,
+            location: event.location,
             status: "live",
           });
         } else if (currentDateTime > eventEndDateTime) {
@@ -453,6 +456,8 @@ export const getParticipantMyEvents = async (req, res, next) => {
               startTime: event.startTime,
               endTime: event.endTime,
               type: event.type,
+              thumbnail: event.thumbnail,
+              location: event.location,
               status: "completed",
             });
           }

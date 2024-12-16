@@ -81,8 +81,16 @@
               const data = await response.json();
               alert(data.message); 
 
+              name = `${data.firstName} ${data.lastName}`;
               localStorage.setItem("token", data.token);
-              window.location.href = "/OrganizerDashboard/organizer.html";
+              localStorage.setItem("role",data.role);
+              localStorage.setItem("name", name);
+              if(data.role === "organizer"){
+                window.location.href = "/OrganizerDashboard/organizer.html";
+              }
+              else{
+                window.location.href = "/ParticipantDashboard/participant.html";
+              }
             } else {
               const error = await response.json();
               alert(error.message); 

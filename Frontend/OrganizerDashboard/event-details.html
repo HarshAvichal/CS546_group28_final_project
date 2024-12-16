@@ -56,7 +56,6 @@
           const response = await fetch(`/api/v1/events/details/${eventId}`);
           const event = await response.json();
 
-          // Display event details
           eventDetailsDiv.innerHTML = `
           <h2>${event.title}</h2>
           <p>${event.description}</p>
@@ -66,7 +65,6 @@
           <p>Date: ${event.date}</p>
         `;
 
-          // Fetch RSVP list
           const rsvpResponse = await fetch(`/api/v1/events/${eventId}/rsvps`);
           const rsvps = await rsvpResponse.json();
 
@@ -78,14 +76,13 @@
             rsvpListItems.innerHTML += rsvpItem;
           });
 
-          // Fetch feedback if event is completed
           if (event.status === "completed") {
             const feedbackResponse = await fetch(
               `/api/v1/events/${eventId}/feedback`
             );
             const feedback = await feedbackResponse.json();
 
-            feedbackListItems.innerHTML = ""; // Clear previous feedback
+            feedbackListItems.innerHTML = "";
             feedback.forEach((feedbackItem) => {
               const feedbackItemLi = `
               <li>${feedbackItem.participant.firstName} ${feedbackItem.participant.lastName}: ${feedbackItem.comment}</li>
@@ -93,7 +90,6 @@
               feedbackListItems.innerHTML += feedbackItemLi;
             });
           } else {
-            // Hide feedback section if event is not completed
             document.getElementById("feedback-list").style.display = "none";
           }
         } catch (error) {
@@ -104,13 +100,10 @@
 
       fetchEventDetails();
 
-      // Update event button handler
       updateEventBtn.addEventListener("click", () => {
-        // Redirect to create-event.html with event ID for pre-filling
         window.location.href = `create-event.html?id=${eventId}`;
       });
 
-      // Delete event button handler
       deleteEventBtn.addEventListener("click", async () => {
         try {
           const response = await fetch(`/api/v1/events/${eventId}`, {
@@ -118,24 +111,17 @@
           });
 
           if (response.ok) {
-            // Event deleted successfully
-            console.log("Event deleted successfully!");
-            window.location.href = "organizer.html"; // Redirect to organizer dashboard
+            window.location.href = "organizer.html";
           } else {
             const errorData = await response.json();
             console.error("Failed to delete event:", errorData);
-            // Display error message to the user
           }
         } catch (error) {
           console.error("Failed to delete event:", error);
-          // Display error message to the user
         }
       });
 
-      // Logout link handler
       logoutLink.addEventListener("click", () => {
-        // Clear local storage or cookies (if used for authentication)
-        // Redirect to login page
         window.location.href = "login.html";
       });
     </script>

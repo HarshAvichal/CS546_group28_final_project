@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fundraising Meeting Engineers Without Borders</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel=”stylesheet”
+    href=”https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css”/>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <div class="navbar">
+          <ul class="nav-list">
+            <li class="nav-title">
+              <a href="./participant.html" class="nav-title-name">Event Ease</a>
+            </li>
+            <li><a href="./completed-events.html">Completed Event</a></li>
+            <li><a href="./my-events.html">My Event</a></li>
+            <li class="nav-icon-1">
+              <i class="bi bi-person-circle user-icon"></i>
+            </li>
+            <li>
+              <a
+                class="logout-dashboard"
+                href="http://localhost:3000/login.html"
+                >Logout</a
+              >
+            </li>
+          </ul>
+        </div>
+      </header>
+
+      <div class="details-section">
+        <div class="event-title-description">
+          <div>
+            <img
+              id="event-thumbnail"
+              class="event-thumbnail"
+              alt="Event Thumbnail"
+            />
+          </div>
+          <div>
+            <h1 id="event-title"></h1>
+            <p id="event-description"></p>
+          </div>
+        </div>
+
+        <div class="registration-details">
+          <div class="timing-location">
+            <h2>Timing and Location</h2>
+            <p><strong>Start:</strong> <span id="event-start-time"></span></p>
+            <p><strong>End:</strong> <span id="event-end-time"></span></p>
+            <p><strong>Date:</strong> <span id="event-date"></span></p>
+            <p><strong>Location:</strong> <a id="event-location"></a></p>
+          </div>
+
+          <div class="registration">
+            <h2>Registration</h2>
+            <p>
+              <strong>Start Date:</strong>
+              <span id="event-registration-date"></span>
+            </p>
+            <p><strong>Price:</strong> Free</p>
+
+            <button class="register-btn" onclick="registerForEvent()">
+              Register
+            </button>
+            <button class="cancel-btn" onclick="cancelRSVP()">
+              Cancel Registration
+            </button>
+          </div>
+        </div>
+
+        <div class="display-ticket"></div>
+      </div>
+
+      <footer id="footer-section-event-detail">
+        <div class="footer-content">
+          <div class="footer-logo">
+            <img src="../Event Ease sample logo.jpeg" alt="Event Ease Logo" />
+          </div>
+          <div class="footer-links">
+            <ul>
+              <li><a href="#">About Us</a></li>
+              <li><a href="#">Services</a></li>
+              <li><a href="#">Events</a></li>
+              <li><a href="#">Contact</a></li>
+              <li><a href="#">Privacy Policy</a></li>
+            </ul>
+          </div>
+          <div class="footer-social">
+            <a href="https://facebook.com" target="_blank" class="social-icon"
+              >FB</a
+            >
+            <a href="https://twitter.com" target="_blank" class="social-icon"
+              >TW</a
+            >
+            <a href="https://instagram.com" target="_blank" class="social-icon"
+              >IG</a
+            >
+            <a href="https://linkedin.com" target="_blank" class="social-icon"
+              >IN</a
+            >
+          </div>
+          <div class="footer-copyright">
+            <p>&copy; 2024 Event Ease. All Rights Reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      function formatTime(timeString) {
+        if (!timeString) return "N/A";
+        const [hour, minute] = timeString.split(":");
+        const date = new Date();
+        date.setHours(hour, minute);
+        return date.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const eventData = JSON.parse(localStorage.getItem("eventData"));
+        const ticket = localStorage.getItem("ticket");
+
+        if (eventData) {
+          document.getElementById("event-title").textContent = eventData.title;
+          document.getElementById("event-description").textContent =
+            eventData.description;
+          document.getElementById("event-date").textContent = eventData.date;
+          document.getElementById("event-start-time").textContent = formatTime(
+            eventData.startTime
+          );
+          document.getElementById("event-end-time").textContent = formatTime(
+            eventData.endTime
+          );
+          document.getElementById("event-location").textContent =
+            eventData.location;
+          document.getElementById("event-registration-date").textContent =
+            eventData.date;
+          document.getElementById("event-thumbnail").src = eventData.thumbnail;
+        } else {
+          console.warn("No event data found in localStorage");
+        }
+
+        if (ticket) {
+          displayRegisteredMessage(ticket);
+        }
+      });
+
+      function displayRegisteredMessage(ticket) {
+        const messageContainer = document.querySelector(".display-ticket");
+        messageContainer.classList.add("ticket-info");
+        messageContainer.textContent = "You have successfully registered for this event! \n Your Ticket ID: " + `${ticket}`;
+      }
+
+      async function registerForEvent() {
+        const eventData = JSON.parse(localStorage.getItem("eventData"));
+        if (!eventData) return alert("No event data available");
+
+        try {
+          const response = await fetch(
+            `http://localhost:3000/api/v1/rsvp/${eventData.id}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          if (!response.ok)
+            throw new Error(
+              `HTTP Error: ${response.status} - ${response.statusText}`
+            );
+
+          const data = await response.json();
+          localStorage.setItem("ticket", data.ticket);
+          if (response.ok) {
+            alert("Successfully registered for the event");
+            localStorage.setItem("ticket");
+          } else {
+            alert(result.message || "Failed to register for the event");
+          }
+        } catch (error) {
+          console.error("Error registering for event:", error);
+        }
+      }
+
+      async function cancelRSVP() {
+        const eventData = JSON.parse(localStorage.getItem("eventData"));
+        if (!eventData) return alert("No event data available");
+
+        try {
+          const response = await fetch(
+            `http://localhost:3000/api/v1/rsvp/${eventData.id}/cancel`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            }
+          );
+
+          const contentType = response.headers.get("content-type");
+          const result =
+            contentType && contentType.includes("application/json")
+              ? await response.json()
+              : {};
+
+          localStorage.removeItem("ticket");
+          if (response.ok) {
+            alert("Successfully canceled your registration");
+          } else {
+            alert(result.message || "Failed to cancel the registration");
+          }
+        } catch (error) {
+          console.error("Error canceling RSVP:", error);
+        }
+      }
+    </script>
+  </body>
+</html>
