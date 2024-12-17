@@ -37,9 +37,8 @@ Set up environment variables: Create a .env file in the root directory and add t
                               CLOUDINARY_API_KEY = 729469184148217
                               CLOUDINARY_API_SECRET = 2HA4kd183Gk8ock0HJDFnt4g9ioc
 
-Run the seed file: node seed.js
-Start the server: npm run dev
-production mode: npm start 
+Run the seed file: node seed.js from BACKEND/seed.js
+Start the server: npm run dev 
 Visit application on: http://localhost:3000
 
 ## API Documentation
