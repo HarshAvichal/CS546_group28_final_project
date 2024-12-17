@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Event Details</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <img src="Event Ease sample logo.jpeg" alt="Eventease Logo" />
+      </div>
+      <div class="main-content">
+        <div class="dashboard-header">
+          <h1>Event Details</h1>
+          <nav>
+            <ul>
+              <li><a href="organizer.html">Home</a></li>
+              <li><a href="create-event.html">Create Event</a></li>
+              <li><a href="completed-events.html">Completed Events</a></li>
+              <li><a href="live-events.html">Live</a></li>
+              <li><a href="contact-us.html">Contact Me</a></li>
+              <li><a href="#" id="logout-link">Logout</a></li>
+            </ul>
+          </nav>
+        </div>
+
+        <div id="event-details"></div>
+
+        <div id="rsvp-list">
+          <h3>RSVP List</h3>
+          <ul id="rsvp-list-items"></ul>
+        </div>
+
+        <div id="feedback-list">
+          <h3>Feedback</h3>
+          <ul id="feedback-list-items"></ul>
+        </div>
+
+        <button id="update-event-btn">Update Event</button>
+        <button id="delete-event-btn">Delete Event</button>
+      </div>
+    </div>
+
+    <script>
+      const eventId = new URLSearchParams(window.location.search).get("id");
+      const eventDetailsDiv = document.getElementById("event-details");
+      const rsvpListItems = document.getElementById("rsvp-list-items");
+      const feedbackListItems = document.getElementById("feedback-list-items");
+      const updateEventBtn = document.getElementById("update-event-btn");
+      const deleteEventBtn = document.getElementById("delete-event-btn");
+      const logoutLink = document.getElementById("logout-link");
+
+      // Fetch event details
+      async function fetchEventDetails() {
+        try {
+          const response = await fetch(`/api/v1/events/details/${eventId}`);
+          const event = await response.json();
+
+          eventDetailsDiv.innerHTML = `
+          <h2>${event.title}</h2>
+          <p>${event.description}</p>
+          <p>Location: ${event.location}</p>
+          <p>Start Time: ${event.startTime}</p>
+          <p>End Time: ${event.endTime}</p>
+          <p>Date: ${event.date}</p>
+        `;
+
+          const rsvpResponse = await fetch(`/api/v1/events/${eventId}/rsvps`);
+          const rsvps = await rsvpResponse.json();
+
+          rsvpListItems.innerHTML = ""; // Clear previous RSVPs
+          rsvps.forEach((rsvp) => {
+            const rsvpItem = `
+            <li>${rsvp.participant.firstName} ${rsvp.participant.lastName}</li>
+          `;
+            rsvpListItems.innerHTML += rsvpItem;
+          });
+
+          if (event.status === "completed") {
+            const feedbackResponse = await fetch(
+              `/api/v1/events/${eventId}/feedback`
+            );
+            const feedback = await feedbackResponse.json();
+
+            feedbackListItems.innerHTML = "";
+            feedback.forEach((feedbackItem) => {
+              const feedbackItemLi = `
+              <li>${feedbackItem.participant.firstName} ${feedbackItem.participant.lastName}: ${feedbackItem.comment}</li>
+            `;
+              feedbackListItems.innerHTML += feedbackItemLi;
+            });
+          } else {
+            document.getElementById("feedback-list").style.display = "none";
+          }
+        } catch (error) {
+          console.error("Error fetching event details:", error);
+          eventDetailsDiv.innerHTML = "<p>Error loading event details.</p>";
+        }
+      }
+
+      fetchEventDetails();
+
+      updateEventBtn.addEventListener("click", () => {
+        window.location.href = `create-event.html?id=${eventId}`;
+      });
+
+      deleteEventBtn.addEventListener("click", async () => {
+        try {
+          const response = await fetch(`/api/v1/events/${eventId}`, {
+            method: "DELETE",
+          });
+
+          if (response.ok) {
+            window.location.href = "organizer.html";
+          } else {
+            const errorData = await response.json();
+            console.error("Failed to delete event:", errorData);
+          }
+        } catch (error) {
+          console.error("Failed to delete event:", error);
+        }
+      });
+
+      logoutLink.addEventListener("click", () => {
+        window.location.href = "login.html";
+      });
+    </script>
+
+    <footer id="footer-section">
+      <div class="footer-content">
+        <div class="footer-logo">
+          <img src="../Event Ease sample logo.jpeg" alt="Event Ease Logo" />
+        </div>
+        <div class="footer-links">
+          <ul>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Services</a></li>
+            <li><a href="#">Events</a></li>
+            <li><a href="#">Contact</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div class="footer-social">
+          <a href="https://facebook.com" target="_blank" class="social-icon"
+            >FB</a
+          >
+          <a href="https://twitter.com" target="_blank" class="social-icon"
+            >TW</a
+          >
+          <a href="https://instagram.com" target="_blank" class="social-icon"
+            >IG</a
+          >
+          <a href="https://linkedin.com" target="_blank" class="social-icon"
+            >IN</a
+          >
+        </div>
+        <div class="footer-copyright">
+          <p>&copy; 2024 Event Ease. All Rights Reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
