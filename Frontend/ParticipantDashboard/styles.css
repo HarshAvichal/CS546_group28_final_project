@@ -201,7 +201,7 @@ li a:hover {
   height: 250px;
   width: 350px;
   border-radius: 20px;
-  margin-right: 30px;
+  margin-right: 50px;
 }
 
 @media (max-width: 768px) {
@@ -249,24 +249,24 @@ li a:hover {
   font-size: 20px;
 }
 
-.event-title-description{
+.event-title-description {
   display: flex;
   flex-direction: row;
-  gap:40px;
+  gap: 40px;
   margin-bottom: 50px;
 }
 
-#event-title{
-  font-size:48px;
-  margin-bottom:20px;
+#event-title {
+  font-size: 48px;
+  margin-bottom: 20px;
 }
 
-#event-thumbnail{
-  width:500px;
+#event-thumbnail {
+  width: 500px;
   height: auto;
 }
 
-#event-description{
+#event-description {
   text-align: justify;
   font-size: 16px;
 }
@@ -274,10 +274,9 @@ li a:hover {
 #event-start-time,
 #event-end-time,
 #event-date,
-#event-location{
+#event-location {
   font-size: 20px;
 }
-
 
 .attendees-spots {
   text-align: right;
@@ -287,8 +286,7 @@ li a:hover {
   padding: 20px;
 }
 
-
-.registration-details{
+.registration-details {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -311,47 +309,46 @@ li a:hover {
   border-top: 1px solid #ddd;
 }
 
-.display-ticket{
+.display-ticket {
   text-align: center;
   margin-top: 50px;
-  font-size: 24px;
+  font-size: 20px;
 }
 
 /* Swipper Card */
-.events-grid-my-events{
+.events-grid-my-events {
   display: flex;
-  height:500px;
+  height: 500px;
   width: 100%;
 }
 
-.event-card{
+.event-card {
   display: flex;
   flex-direction: column;
   margin: 0px 50px;
 }
 
-.card{
+.card {
   position: relative;
   margin-top: 20px;
-  padding:40px;
+  padding: 40px;
   background: #fff;
   border-radius: 20px;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   text-align: center;
   align-items: center;
-  height:400px;
+  height: 400px;
   font-size: 20px;
 }
 
-.image-thumbnail{
-  width:300px;
-  height:100px;
+.image-thumbnail {
+  width: 300px;
+  height: 100px;
   overflow: hidden;
 }
 
-
 /* Footer Section */
-#footer-section-event-detail{
+#footer-section-event-detail {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -361,7 +358,6 @@ li a:hover {
   padding: 40px 0;
   margin-top: 30px;
 }
-
 
 #footer-section {
   background-color: #e3e5e6;
@@ -430,4 +426,3 @@ li a:hover {
   margin-top: 20px;
   flex-basis: 100%;
 }
-

@@ -129,7 +129,6 @@
 
       document.addEventListener("DOMContentLoaded", function () {
         const eventData = JSON.parse(localStorage.getItem("eventData"));
-        const ticket = localStorage.getItem("ticket");
 
         if (eventData) {
           document.getElementById("event-title").textContent = eventData.title;
@@ -142,24 +141,57 @@
           document.getElementById("event-end-time").textContent = formatTime(
             eventData.endTime
           );
-          document.getElementById("event-location").textContent =
-            eventData.location;
+          document.getElementById("event-thumbnail").src = eventData.thumbnail;
+
+          const eventLocationElement =
+            document.getElementById("event-location");
+
+          if (eventData.type === "online") {
+            const currentTime = new Date();
+            const eventDateTime = new Date(
+              `${eventData.date}T${eventData.startTime}`
+            );
+            const timeDifference = eventDateTime - currentTime;
+            const hoursLeft = timeDifference / (1000 * 60 * 60);
+
+            if (hoursLeft <= 24) {
+              eventLocationElement.textContent = eventData.location;
+              eventLocationElement.href = eventData.location;
+              if (eventData?.ticket) {
+                displayRegisteredMessage(eventData.ticket);
+              }
+            } else {
+              eventLocationElement.textContent =
+                "Event link details will be available 24 hours before the event.";
+
+              displayRegisteredMessage(
+                "Event link details will be available 24 hours before the event."
+              );
+            }
+          } else if (eventData.type === "in-person") {
+            eventLocationElement.textContent = eventData.location;
+            if (eventData?.ticket) {
+              displayRegisteredMessage(eventData.ticket);
+            }
+          } else {
+            eventLocationElement.textContent =
+              "Location details are not available.";
+          }
+
           document.getElementById("event-registration-date").textContent =
             eventData.date;
           document.getElementById("event-thumbnail").src = eventData.thumbnail;
         } else {
           console.warn("No event data found in localStorage");
         }
-
-        if (ticket) {
-          displayRegisteredMessage(ticket);
-        }
       });
 
       function displayRegisteredMessage(ticket) {
         const messageContainer = document.querySelector(".display-ticket");
         messageContainer.classList.add("ticket-info");
-        messageContainer.textContent = "You have successfully registered for this event! \n Your Ticket ID: " + `${ticket}`;
+        messageContainer.textContent =
+          "You have successfully registered for this event! \n Your Ticket ID: " +
+          `${ticket}`;
       }
 
       async function registerForEvent() {
@@ -184,20 +216,20 @@
             );
 
           const data = await response.json();
-          localStorage.setItem("ticket", data.ticket);
           if (response.ok) {
             alert("Successfully registered for the event");
-            localStorage.setItem("ticket");
           } else {
             alert(result.message || "Failed to register for the event");
           }
         } catch (error) {
           console.error("Error registering for event:", error);
+          alert("Something went wrong in registering event", error);
         }
       }
 
       async function cancelRSVP() {
         const eventData = JSON.parse(localStorage.getItem("eventData"));
+        const messageContainer = document.querySelector(".display-ticket");
         if (!eventData) return alert("No event data available");
 
         try {
@@ -218,9 +250,10 @@
               ? await response.json()
               : {};
 
-          localStorage.removeItem("ticket");
+          messageContainer.style.display = "none";
           if (response.ok) {
             alert("Successfully canceled your registration");
+            window.location.href = "/ParticipantDashboard/my-events.html";
           } else {
             alert(result.message || "Failed to cancel the registration");
           }

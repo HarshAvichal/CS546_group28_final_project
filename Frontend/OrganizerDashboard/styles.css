@@ -270,7 +270,8 @@ li a:hover{
 }
 
 /* CREATE EVENT FORM */
-#create-event-form{
+#create-event-form,
+#update-event-form{
   margin:100px;
   padding:30px;
   border-radius: 20px;

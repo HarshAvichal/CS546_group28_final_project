@@ -347,9 +347,24 @@ document.addEventListener("DOMContentLoaded", () => {
           event.startTime
         )} - ${formatTime(event.endTime)}</div>
         <div class="event-type"><strong>Type:</strong> ${event.type}</div>
+        <div class="event-location">
+      <strong>Location:</strong> 
+      ${
+        event.location
+          ? `<a href="${event.location}" target="_blank" rel="noopener noreferrer">${event.location}</a>`
+          : "N/A"
+      }
+    </div>
         <div class="event-status"><strong>Status:</strong> ${
           event.status || (isCompletedPage ? "Completed" : "Upcoming")
         }</div>
+        ${
+          event.status === "upcoming"
+            ? `<button class="update-event-button" data-event='${JSON.stringify(
+                event
+              )}'>Update Event</button>`
+            : ""
+        }
       </div>
     `;
       eventsGrid.appendChild(eventCard);

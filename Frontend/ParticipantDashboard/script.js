@@ -33,6 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
           window.location.href = "/login.html";
         } else {
           alert("Error logging out");
+          localStorage.clear();
+          window.location.href = "/login.html";
         }
       } catch (error) {
         console.error("Error logging out:", error);
@@ -43,10 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (window.location.pathname.includes("participant.html")) {
     const eventsGrid = document.getElementById("my-events-grid");
-    const baseURL = "http://localhost:3000/api/v1/events";
 
     async function fetchUpcomingEvents() {
-      const baseURL = "http://localhost:3000/api/v1/events";
       try {
         const response = await fetch(
           "http://localhost:3000/api/v1/events/participant/upcoming",
@@ -85,9 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // COMPLETED PAGE LOGIC
   if (window.location.pathname.includes("completed-events.html")) {
-    const eventsGrid = document.getElementById(
-      "completed-events-grid-participant"
-    );
+    const eventsGrid = document.getElementById("my-events-grid");
 
     async function fetchCompletedEvents() {
       try {
@@ -153,14 +151,15 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="event-status"><strong>Status:</strong> ${
         event.status || "N/A"
       }</div>
-      <div class="event-location">
-      <strong>Location:</strong> 
-      ${
-        event.location
-          ? `<a href="${event.location}" target="_blank" rel="noopener noreferrer">${event.location}</a>`
-          : "N/A"
-      }
-    </div>
+     <div class="event-location">
+  <strong>Location:</strong> 
+  ${
+    event.type === "in-person" && event.location
+      ? `<a href="${event.location}" target="_blank" rel="noopener noreferrer">${event.location}</a>`
+      : "Link will be available after registration"
+  }
+</div>
+
     ${
       event.status === "upcoming"
         ? `<button class="register-event-button" data-event='${JSON.stringify(
@@ -189,8 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // MY EVENT PAGE
   if (window.location.pathname.includes("my-events.html")) {
-    const token = localStorage.getItem("authToken");
-
     async function fetchMyEvents(type = "") {
       try {
         const response = await fetch(
@@ -235,15 +232,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 }" alt="Event Thumbnail" class="image-thumbnail"/>
                 <div class="event-card-content">
                     <div class="event-card-title">${event.title}</div>
-                    <div class="event-card-details">Date: ${formatDate(
-                      event.date
-                    )}</div>
+                    <div class="event-card-details">Date: ${event.date}</div>
                     <div class="event-card-details">Time: ${formatTime(
                       event.startTime
                     )} - ${formatTime(event.endTime)}</div>
                     <div class="event-card-details">Type: ${event.type}</div>
-                    <div class="event-card-location">Type: ${
-                      event.location
+                    <div class="event-card-location">Location: 
+                    ${
+                      event.type === "online"
+                        ? (() => {
+                            const currentTime = new Date();
+                            const eventDateTime = new Date(
+                              `${event.date}T${event.startTime}`
+                            );
+                            const timeDifference = eventDateTime - currentTime;
+                            const hoursLeft = timeDifference / (1000 * 60 * 60);
+                            return hoursLeft <= 24
+                              ? `<a href="${event.location}">${event.location}</a>`
+                              : "Link details will be available 24 hours before the event.";
+                          })()
+                        : event.location
                     }</div>
                     <button class="check-ticket-button" data-event='${JSON.stringify(
                       event
@@ -256,66 +264,104 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     fetchMyEvents();
   }
-});
 
-// CHECK TICKET BUTTON
-document.addEventListener("click", function (event) {
-  if (event.target.classList.contains("check-ticket-button")) {
-    event.preventDefault();
-    const eventData = JSON.parse(event.target.getAttribute("data-event"));
-    window.location.href =
-      "http://localhost:3000/ParticipantDashboard/event-details.html";
-    localStorage.setItem("eventData", JSON.stringify(eventData));
-  }
-
-    //FILTER PROPERTY
-    const categoryFilter = document.getElementById("category-filter");
-    const searchBtn = document.getElementById("search-btn");
-    const eventsGrid = document.getElementById("my-events-grid");
-    const baseURL = "http://localhost:3000/api/v1/events";
-  
-    const isCompletedPage = window.location.pathname.includes("completed-events");
-    const endpoint = `${baseURL}/participant/${
-      isCompletedPage ? "completed" : "upcoming"
-    }`;
-  
-    // Fetch and render filtered events
-    const fetchFilteredEvents = async (typeFilter) => {
+  document.addEventListener("click", async function (event) {
+    if (event.target.classList.contains("check-ticket-button")) {
+      event.preventDefault();
       try {
-        const query = typeFilter ? `?type=${encodeURIComponent(typeFilter)}` : "";
-        const response = await fetch(`${endpoint}${query}`, {
+        const eventData = JSON.parse(event.target.getAttribute("data-event"));
+        if (eventData.status === "upcoming") {
+          if (eventData.type === "in-person") {
+            const ticket = await getTicketUser(eventData.id);
+            eventData["ticket"] = ticket;
+          } else if (eventData.type === "online") {
+            const ticket = eventData.location;
+            eventData["ticket"] = ticket;
+          }
+        }
+        localStorage.setItem("eventData", JSON.stringify(eventData));
+        window.location.href =
+          "http://localhost:3000/ParticipantDashboard/event-details.html";
+      } catch (error) {
+        console.error("Error fetching ticket:", error);
+        alert("Failed to fetch ticket. Please try again.");
+      }
+    }
+  });
+
+  async function getTicketUser(event_id) {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/v1/rsvp/${event_id}/ticket`,
+        {
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: "Bearer " + localStorage.getItem("token"),
           },
-        });
-  
-        if (!response.ok) throw new Error("Failed to fetch events");
-  
-        const data = await response.json();
-        renderEvents(data.events || []);
-      } catch (error) {
-        console.error("Error fetching filtered events:", error.message);
-        eventsGrid.innerHTML = `<p>Error loading events. Please try again later.</p>`;
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ticket: ${response.statusText}`);
       }
-    };
-  
-    // Render events in card format
-    const renderEvents = (events) => {
-      eventsGrid.innerHTML = ""; // Clear previous events
-  
-      if (!events || events.length === 0) {
-        eventsGrid.innerHTML = `<p>No events found for the selected filter.</p>`;
-        return;
-      }
-  
-      events.forEach((event) => {
-        const eventCard = document.createElement("div");
-        eventCard.classList.add("row");
-  
-        eventCard.innerHTML = `
+      const data = await response.json();
+      return data.ticket;
+    } catch (error) {
+      console.error("Error in getTicketUser:", error);
+      throw error; // Rethrow the error so it can be handled by the calling function
+    }
+  }
+
+  //FILTER PROPERTY
+  const categoryFilter = document.getElementById("category-filter");
+  const searchBtn = document.getElementById("search-btn");
+  const eventsGrid = document.getElementById("my-events-grid");
+  const baseURL = "http://localhost:3000/api/v1/events";
+
+  const isCompletedPage = window.location.pathname.includes("completed-events");
+  const endpoint = `${baseURL}/participant/${
+    isCompletedPage ? "completed" : "upcoming"
+  }`;
+
+  // Fetch and render filtered events
+  const fetchFilteredEvents = async (typeFilter) => {
+    try {
+      const query = typeFilter ? `?type=${encodeURIComponent(typeFilter)}` : "";
+      const response = await fetch(`${endpoint}${query}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch events");
+
+      const data = await response.json();
+      renderEvents(data.events || []);
+    } catch (error) {
+      console.error("Error fetching filtered events:", error.message);
+      eventsGrid.innerHTML = `<p>Error loading events. Please try again later.</p>`;
+    }
+  };
+
+  // Render events in card format
+  const renderEvents = (events) => {
+    eventsGrid.innerHTML = ""; // Clear previous events
+
+    if (!events || events.length === 0) {
+      eventsGrid.innerHTML = `<p>No events found for the selected filter.</p>`;
+      return;
+    }
+
+    events.forEach((event) => {
+      const eventCard = document.createElement("div");
+      eventCard.classList.add("row");
+
+      eventCard.innerHTML = `
         <div>
-          <img src="${event.thumbnail || "https://via.placeholder.com/350x250"}" 
+          <img src="${
+            event.thumbnail || "https://via.placeholder.com/350x250"
+          }" 
                alt="Event Image" 
                class="event-thumbnail" />
         </div>
@@ -332,6 +378,14 @@ document.addEventListener("click", function (event) {
           <div class="event-status"><strong>Status:</strong> ${
             event.status || (isCompletedPage ? "Completed" : "Upcoming")
           }</div>
+           <div class="event-location">
+          <strong>Location:</strong> 
+          ${
+            event.type === "in-person" && event.location
+              ? `<a href="${event.location}" target="_blank" rel="noopener noreferrer">${event.location}</a>`
+              : "Link will be available after registration"
+          }
+          </div>
           ${
             event.status === "upcoming"
               ? `<button class="register-event-button" data-event='${JSON.stringify(
@@ -341,19 +395,15 @@ document.addEventListener("click", function (event) {
           }
         </div>
       `;
-        eventsGrid.appendChild(eventCard);
-      });
-    };
-  
-    searchBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      const typeFilter = categoryFilter.value;
-      fetchFilteredEvents(typeFilter);
+      eventsGrid.appendChild(eventCard);
     });
-  
-    fetchFilteredEvents();
+  };
 
-
+  searchBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const typeFilter = categoryFilter.value;
+    fetchFilteredEvents(typeFilter);
+  });
 });
 
 // FORMAT DATE

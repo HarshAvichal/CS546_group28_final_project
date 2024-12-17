@@ -757,17 +757,21 @@ export const updateEvent = async (req, res, next) => {
 
     // 7. Handle Thumbnail Updates
     if (req.file) {
-      // Delete the old thumbnail from Cloudinary
       if (event.thumbnail && !event.thumbnail.includes("placeholder")) {
-        const publicId = event.thumbnail.split("/").pop().split(".")[0];
-        await cloudinary.v2.uploader.destroy(publicId);
+        const publicId = event.thumbnail.match(
+          /\/(?:v\d+\/)?([^/]+)\.[a-z]+$/i
+        )[1];
+        await cloudinary.uploader.destroy(publicId);
       }
 
-      // Assign the new thumbnail
-      event.thumbnail = req.file.path.replace(
-        "/upload/",
-        "/upload/w_300,h_200,c_fill/"
+      const thumbnailResponse = await cloudinary.uploader.upload(
+        req.file.path,
+        {
+          public_id: `thumbnails/${event.id}`,
+        }
       );
+
+      event.thumbnail = thumbnailResponse.secure_url;
     }
 
     // 8. Update Event Details
@@ -778,8 +782,7 @@ export const updateEvent = async (req, res, next) => {
     event.endTime = endTime || event.endTime;
     event.type = type || event.type;
     event.location = location || event.location;
-
-    await event.save();
+    (event.thumbnail = event.thumbnail), await event.save();
 
     // 9. Notify Participants About Updates
     const rsvps = await RSVP.find({ eventId: event._id, status: "active" });
