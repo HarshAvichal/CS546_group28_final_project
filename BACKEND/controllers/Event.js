@@ -5,27 +5,23 @@ import mongoose from "mongoose";
 import { sendEmail } from "../utils/emailSender.js";
 import cloudinary from "../utils/cloudinary.js";
 
-// Create Event
 export const createEvent = async (req, res, next) => {
   try {
     const { title, description, date, startTime, endTime, type, location } =
       req.body;
 
-    // Only organizers can create events
     if (req.user.role !== "organizer") {
       return res
         .status(403)
         .json({ message: "Only organizers can create events." });
     }
 
-    // Validate required fields
     if (!title || !date || !startTime || !endTime || !type) {
       return res.status(400).json({
         message: "Title, date, startTime, endTime, and type are required.",
       });
     }
 
-    // Validate date format
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(date)) {
       return res.status(400).json({
@@ -33,7 +29,6 @@ export const createEvent = async (req, res, next) => {
       });
     }
 
-    // Normalize time input
     const normalizeTime = (time) => {
       const [hours, minutes] = time.split(":").map(Number);
       if (
@@ -62,7 +57,6 @@ export const createEvent = async (req, res, next) => {
       return res.status(400).json({ message: error.message });
     }
 
-    // Logical validation: startTime < endTime
     if (normalizedStartTime >= normalizedEndTime) {
       return res
         .status(400)
@@ -72,21 +66,18 @@ export const createEvent = async (req, res, next) => {
     const currentDateTime = new Date();
     const eventStartDateTime = new Date(`${date}T${normalizedStartTime}`);
 
-    // Check if the event is in the past
     if (eventStartDateTime < currentDateTime) {
       return res
         .status(400)
         .json({ message: "Cannot create an event in the past." });
     }
 
-    // Validate type
     if (!["online", "in-person"].includes(type)) {
       return res.status(400).json({
         message: "Invalid event type. Must be 'online' or 'in-person'.",
       });
     }
 
-    // Automatically generate a Jitsi link if the event is online and no link is provided
     let eventLocation = location;
     if (type === "online") {
       if (!location) {
@@ -101,7 +92,6 @@ export const createEvent = async (req, res, next) => {
       }
     }
 
-    // Check for conflicting events
     const conflict = await Event.findOne({
       organizerId: req.user.id,
       date,
@@ -125,7 +115,6 @@ export const createEvent = async (req, res, next) => {
       public_id: "thumbnail",
     });
 
-    // Create the event
     const event = new Event({
       title,
       description,
@@ -136,30 +125,28 @@ export const createEvent = async (req, res, next) => {
       location: eventLocation,
       organizerId: req.user.id,
       thumbnail: thumbnailResponse.secure_url,
-      status: "upcoming", // Explicitly set the default status
+      status: "upcoming",
     });
 
     await event.save();
     res.status(201).json({ message: "Event created successfully", event });
   } catch (error) {
     console.error("Error creating event:", error);
-    next(error); // Pass error to centralized error handler
+    next(error); 
   }
 };
 
-// Get All Events for Organizer (Upcoming)
 export const getOrganizerUpcomingEvents = async (req, res, next) => {
   try {
     const currentDateTime = new Date();
-    const { type, page = 1, limit = 200 } = req.query; // Extract query parameters with defaults
+    const { type, page = 1, limit = 200 } = req.query;
 
-    // Normalize the type filter (case-insensitive)
     const normalizedType = type ? type.toLowerCase() : null;
 
     const query = {
       organizerId: req.user.id,
       $or: [
-        { date: { $gt: currentDateTime.toISOString().split("T")[0] } }, // Future dates
+        { date: { $gt: currentDateTime.toISOString().split("T")[0] } },
         {
           date: currentDateTime.toISOString().split("T")[0], // Today
           startTime: { $gte: currentDateTime.toTimeString().split(" ")[0] },
@@ -171,14 +158,14 @@ export const getOrganizerUpcomingEvents = async (req, res, next) => {
       query.type = normalizedType;
     }
 
-    const totalItems = await Event.countDocuments(query); // Total number of matching events
+    const totalItems = await Event.countDocuments(query);
     const events = await Event.find(
       query,
       "title description date startTime endTime type status thumbnail location"
     ) // Project minimal fields
-      .sort({ date: 1, startTime: 1 }) // Sort by date and startTime
-      .skip((page - 1) * limit) // Skip documents for pagination
-      .limit(parseInt(limit)); // Limit the number of documents
+      .sort({ date: 1, startTime: 1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
 
     res.status(200).json({
       metadata: {
@@ -191,25 +178,23 @@ export const getOrganizerUpcomingEvents = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching organizer's upcoming events:", error);
-    next(error); // Pass error to centralized error handler
+    next(error);
   }
 };
 
-// Get All Events for Organizer (completed)
 export const getOrganizerCompletedEvents = async (req, res, next) => {
   try {
     const currentDateTime = new Date();
-    const { type, page = 1, limit = 10 } = req.query; // Extract query parameters with defaults
+    const { type, page = 1, limit = 10 } = req.query; 
 
-    // Normalize the type filter (case-insensitive)
     const normalizedType = type ? type.toLowerCase() : null;
 
     const query = {
       organizerId: req.user.id,
       $or: [
-        { date: { $lt: currentDateTime.toISOString().split("T")[0] } }, // Past dates
+        { date: { $lt: currentDateTime.toISOString().split("T")[0] } },
         {
-          date: currentDateTime.toISOString().split("T")[0], // Today
+          date: currentDateTime.toISOString().split("T")[0],
           endTime: { $lt: currentDateTime.toTimeString().split(" ")[0] },
         },
       ],
@@ -220,18 +205,18 @@ export const getOrganizerCompletedEvents = async (req, res, next) => {
     }
 
     await Event.updateMany(
-      { ...query, status: { $ne: "completed" } }, // Only update if status is not already "completed"
+      { ...query, status: { $ne: "completed" } },
       { $set: { status: "completed" } }
     );
 
-    const totalItems = await Event.countDocuments(query); // Total number of matching events
+    const totalItems = await Event.countDocuments(query);
     const events = await Event.find(
       query,
       "title description date startTime endTime type status thumbnail location"
-    ) // Project minimal fields
-      .sort({ date: -1, endTime: -1 }) // Sort by date and endTime
-      .skip((page - 1) * limit) // Skip documents for pagination
-      .limit(parseInt(limit)); // Limit the number of documents
+    )
+      .sort({ date: -1, endTime: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
 
     res.status(200).json({
       metadata: {
@@ -244,36 +229,34 @@ export const getOrganizerCompletedEvents = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching organizer's completed events:", error);
-    next(error); // Pass error to centralized error handler
+    next(error);
   }
 };
 
-// Live Events
 export const getOrganizerLiveEvents = async (req, res, next) => {
   try {
-    const currentDateTime = new Date(); // Current date and time
-    const currentDate = currentDateTime.toISOString().split("T")[0]; // Current date in YYYY-MM-DD
-    const currentTime = currentDateTime.toTimeString().split(" ")[0]; // Current time in HH:MM:SS
+    const currentDateTime = new Date();
+    const currentDate = currentDateTime.toISOString().split("T")[0];
+    const currentTime = currentDateTime.toTimeString().split(" ")[0];
 
     await Event.updateMany(
       {
         organizerId: req.user.id,
-        status: { $ne: "live" }, // Exclude already "live" events
-        date: currentDate, // Events happening today
-        startTime: { $lte: currentTime }, // Start time has passed
-        endTime: { $gte: currentTime }, // End time has not yet passed
+        status: { $ne: "live" },
+        date: currentDate,
+        startTime: { $lte: currentTime },
+        endTime: { $gte: currentTime },
       },
       { $set: { status: "live" } }
     );
 
-    // Fetch live events created by the organizer
     const liveEvents = await Event.find(
       {
         organizerId: req.user.id,
         status: "live",
       },
-      "title date startTime endTime type thumbnail location status description" // Select only necessary fields
-    ).sort({ date: 1, startTime: 1 }); // Sort by date and startTime
+      "title date startTime endTime type thumbnail location status description"
+    ).sort({ date: 1, startTime: 1 });
 
     if (liveEvents.length === 0) {
       return res
@@ -284,42 +267,39 @@ export const getOrganizerLiveEvents = async (req, res, next) => {
     res.status(200).json({ liveEvents });
   } catch (error) {
     console.error("Error fetching live events for organizer:", error);
-    next(error); // Pass the error to the centralized error handler
+    next(error);
   }
 };
 
-// Get All Events for Participants (Upcoming)
 export const getParticipantUpcomingEvents = async (req, res, next) => {
   try {
     const currentDateTime = new Date();
-    const { type, page = 1, limit = 10 } = req.query; // Extract query parameters with defaults
+    const { type, page = 1, limit = 10 } = req.query;
 
-    // Normalize the type filter (case-insensitive)
     const normalizedType = type ? type.toLowerCase() : null;
 
     const query = {
       $or: [
-        { date: { $gt: currentDateTime.toISOString().split("T")[0] } }, // Future dates
+        { date: { $gt: currentDateTime.toISOString().split("T")[0] } },
         {
-          date: currentDateTime.toISOString().split("T")[0], // Today
+          date: currentDateTime.toISOString().split("T")[0],
           startTime: { $gte: currentDateTime.toTimeString().split(" ")[0] },
         },
       ],
     };
 
-    // Apply type filter if provided
     if (normalizedType) {
       query.type = normalizedType;
     }
 
-    const totalItems = await Event.countDocuments(query); // Total number of matching events
+    const totalItems = await Event.countDocuments(query);
     const events = await Event.find(
       query,
       "title date startTime endTime type status location thumbnail description"
-    ) // Project minimal fields
-      .sort({ date: 1, startTime: 1 }) // Sort by date and startTime
-      .skip((page - 1) * limit) // Skip documents for pagination
-      .limit(parseInt(limit)); // Limit the number of documents
+    )
+      .sort({ date: 1, startTime: 1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
 
     res.status(200).json({
       metadata: {
@@ -332,50 +312,44 @@ export const getParticipantUpcomingEvents = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching participant's upcoming events:", error);
-    next(error); // Pass error to centralized error handler
+    next(error);
   }
 };
 
-// Get All Events for Participants (Completed)
 export const getParticipantCompletedEvents = async (req, res, next) => {
   try {
     const currentDateTime = new Date();
-    const { type, page = 1, limit = 10 } = req.query; // Extract query parameters with defaults
+    const { type, page = 1, limit = 10 } = req.query;
 
-    // Normalize the type filter (case-insensitive)
     const normalizedType = type ? type.toLowerCase() : null;
 
-    // Query to find completed events (past events or events ending today)
     const query = {
       $or: [
-        { date: { $lt: currentDateTime.toISOString().split("T")[0] } }, // Past dates
+        { date: { $lt: currentDateTime.toISOString().split("T")[0] } },
         {
           date: currentDateTime.toISOString().split("T")[0], // Today
-          endTime: { $lt: currentDateTime.toTimeString().split(" ")[0] }, // Time already passed
+          endTime: { $lt: currentDateTime.toTimeString().split(" ")[0] },
         },
       ],
     };
 
-    // Apply type filter if provided
     if (normalizedType) {
       query.type = normalizedType;
     }
 
-    // Update status to "completed" for matching events
     await Event.updateMany(
-      { ...query, status: { $ne: "completed" } }, // Only update if status is not already "completed"
+      { ...query, status: { $ne: "completed" } },
       { $set: { status: "completed" } }
     );
 
-    // Fetch updated list of completed events
-    const totalItems = await Event.countDocuments(query); // Total number of matching events
+    const totalItems = await Event.countDocuments(query);
     const events = await Event.find(
       query,
-      "title date startTime endTime type status thumbnail description location" // Project only relevant fields
+      "title date startTime endTime type status thumbnail description location"
     )
-      .sort({ date: -1, endTime: -1 }) // Sort by date and endTime
-      .skip((page - 1) * limit) // Skip for pagination
-      .limit(parseInt(limit)); // Limit the number of documents
+      .sort({ date: -1, endTime: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
 
     res.status(200).json({
       metadata: {
@@ -388,26 +362,22 @@ export const getParticipantCompletedEvents = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching participant's completed events:", error);
-    next(error); // Pass error to centralized error handler
+    next(error);
   }
 };
 
-// Get All Events for Participants (Upcoming + Completed (rsvp'd))
 export const getParticipantMyEvents = async (req, res, next) => {
   try {
     const currentDateTime = new Date();
-    const { type } = req.query; // Extract the type filter from query parameters
+    const { type } = req.query;
 
-    // Normalize the type filter (case-insensitive)
     const normalizedType = type ? type.toLowerCase() : null;
 
-    // Fetch active RSVPs for the participant
     const myRSVPs = await RSVP.find({
       participantId: req.user.id,
       status: "active",
     }).populate("eventId");
 
-    // Separate upcoming, live, and completed events
     const myUpcomingEvents = [];
     const myLiveEvents = [];
     const myCompletedEvents = [];
@@ -474,24 +444,21 @@ export const getParticipantMyEvents = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching participant's events:", error);
-    next(error); // Pass error to centralized error handler
+    next(error);
   }
 };
 
-// Get Event Details (Jitsi Link Visibility for Participants)
 export const getEventDetails = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // Validate event ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid event ID." });
     }
 
-    // Fetch the event and populate relevant details
     const event = await Event.findById(id)
-      .populate("organizerId", "firstName lastName email") // Populate organizer details
-      .populate("feedbackList.participantId", "firstName lastName") // Populate feedback participant names
+      .populate("organizerId", "firstName lastName email")
+      .populate("feedbackList.participantId", "firstName lastName")
       .exec();
 
     if (!event) {
@@ -502,13 +469,11 @@ export const getEventDetails = async (req, res, next) => {
     const currentDateString = currentDate.toISOString().split("T")[0];
     const currentTimeString = currentDate.toTimeString().split(" ")[0];
 
-    // Count active RSVPs (registrations)
     const activeRSVPs = event.rsvpList.filter(
       (rsvp) => rsvp.status === "active"
     );
     const registrationCount = activeRSVPs.length;
 
-    // Format feedback list with participant names
     const formattedFeedbackList = event.feedbackList
       .map((feedback) => {
         if (feedback.participantId) {
@@ -518,20 +483,18 @@ export const getEventDetails = async (req, res, next) => {
             createdAt: feedback.createdAt,
           };
         }
-        return null; // Skip feedback entries without valid participantId
+        return null;
       })
       .filter((feedback) => feedback !== null);
 
-    // Prepare the response object
     const response = event.toObject();
-    response.registrationCount = registrationCount; // Add registration count to the response
+    response.registrationCount = registrationCount;
     response.thumbnail = event.thumbnail
       ? event.thumbnail.replace("/upload/", "/upload/w_300,h_200,c_fill/")
       : "https://via.placeholder.com/300x200?text=No+Thumbnail";
-    response.feedbackList = formattedFeedbackList; // Replace feedback list with formatted version
+    response.feedbackList = formattedFeedbackList;
 
     if (req.user.role === "organizer") {
-      // Fetch RSVP details for organizers
       const rsvpDetails = await RSVP.find({
         eventId: id,
         status: "active",
@@ -549,7 +512,6 @@ export const getEventDetails = async (req, res, next) => {
       );
 
       if (!participantRSVP) {
-        // If participant has not RSVP'd
         response.location = "To get the link, you need to RSVP first.";
       } else if (
         event.type === "online" &&
@@ -557,17 +519,14 @@ export const getEventDetails = async (req, res, next) => {
           new Date(event.date + "T" + event.startTime).getTime() -
             24 * 60 * 60 * 1000
       ) {
-        // If RSVP'd but the event is more than 24 hours away
         response.location = "Link will be visible 24 hours before the event.";
       } else if (event.type === "online") {
-        // If RSVP'd and within 24 hours of the event start time
         response.location = event.location;
       } else if (event.type === "in-person") {
         response.location =
           "Please refer to your ticket for event location details.";
       }
 
-      // If the event is completed
       if (
         event.date < currentDateString ||
         (event.date === currentDateString && event.endTime < currentTimeString)
@@ -583,30 +542,25 @@ export const getEventDetails = async (req, res, next) => {
   }
 };
 
-// Delete Event (Notify Participants)
 export const deleteEvent = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // 1. Validate Event ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid event ID." });
     }
 
-    // 2. Fetch the Event
     const event = await Event.findById(id);
     if (!event) {
       return res.status(404).json({ message: "Event not found." });
     }
 
-    // 3. Verify Organizer Authorization
     if (event.organizerId.toString() !== req.user.id) {
       return res.status(403).json({
         message: "Access denied. Only the organizer can delete this event.",
       });
     }
 
-    // 4. Prevent Deletion of Completed Events
     const currentTime = new Date();
     const eventEndDateTime = new Date(`${event.date}T${event.endTime}`);
     if (currentTime > eventEndDateTime) {
@@ -615,12 +569,10 @@ export const deleteEvent = async (req, res, next) => {
         .json({ message: "Completed events cannot be deleted." });
     }
 
-    // 5. Notify Participants of Event Cancellation
     if (event.rsvpList.length > 0) {
       for (const rsvpEntry of event.rsvpList) {
         const participant = await User.findById(rsvpEntry.participantId);
         if (participant) {
-          // Send cancellation email
           setTimeout(() => {
             sendEmail(
               participant.email,
@@ -636,10 +588,8 @@ export const deleteEvent = async (req, res, next) => {
       }
     }
 
-    // 6. Remove RSVPs Associated with the Event
     await RSVP.deleteMany({ eventId: id });
 
-    // 7. Delete the Event
     await Event.findByIdAndDelete(id);
 
     res.status(200).json({
@@ -648,19 +598,16 @@ export const deleteEvent = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error deleting event:", error);
-    next(error); // Pass error to centralized error handler
+    next(error);
   }
 };
 
-// Search Events by Filters (Category and Type)
 export const searchEvents = async (req, res, next) => {
   try {
     const { type } = req.query;
 
-    // Initialize query object
     const query = {};
 
-    // 1. Filter by Type
     if (type) {
       const validTypes = ["online", "in-person"];
       if (!validTypes.includes(type)) {
@@ -672,7 +619,6 @@ export const searchEvents = async (req, res, next) => {
       query.type = type;
     }
 
-    // 2. Fetch and Sort Events
     const events = await Event.find(query).sort({ date: 1, startTime: 1 }); // Sort by date, then startTime (ascending)
 
     res.status(200).json({ events });
